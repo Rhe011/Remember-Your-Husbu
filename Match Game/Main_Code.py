@@ -2,127 +2,126 @@ import pygame
 import random
 import os
 
-class MemoryGame:
+class Husbu:
     def __init__(self):
-        # Inisialisasi Pygame
+
         pygame.init()
 
-        # Ukuran kartu dan padding
-        self.CARD_WIDTH = 110
-        self.CARD_HEIGHT = 110
-        self.PADDING = 10
+        #kartu
+        self.w_kartu = 110
+        self.h_kartu = 110
+        self.padding = 10
 
-        # Ukuran grid
-        self.ROWS = 4
-        self.COLS = 5
+        self.row = 4
+        self.col = 5
 
-        # Hitung ukuran layar berdasarkan grid dan padding
-        self.SCREEN_WIDTH = 800
-        self.SCREEN_HEIGHT = 650
+        #layar
+        self.w_screen = 800
+        self.h_screen = 650
 
-        # Inisialisasi layar
-        self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((self.w_screen, self.h_screen))
         pygame.display.set_caption("Remember Your Husbu")
 
-        # Load gambar kartu
-        self.image_dir = "Assets"
-        self.valid_extensions = {".png", ".jpg", ".jpeg", ".bmp", ".gif"}
-        self.image_filenames = [f for f in os.listdir(self.image_dir) if os.path.isfile(os.path.join(self.image_dir, f)) and os.path.splitext(f)[1].lower() in self.valid_extensions]
-        self.images = [pygame.image.load(os.path.join(self.image_dir, f)) for f in self.image_filenames]
+        #gambar buat kartu
+        self.assets = "Assets"
+        self.format_img = {".png", ".jpg", ".jpeg", ".bmp", ".gif"}
+        self.image_filenames = [f for f in os.listdir(self.assets) if os.path.isfile(os.path.join(self.assets, f)) and os.path.splitext(f)[1].lower() in self.format_img]
+        self.images = [pygame.image.load(os.path.join(self.assets, f)) for f in self.image_filenames]
 
-        # Pastikan kita punya cukup gambar untuk grid
-        if len(self.images) < (self.ROWS * self.COLS) // 2:
-            raise ValueError("Tidak cukup gambar untuk membuat grid kartu yang sesuai.")
+        #tes eror kalo ga cukup gambarnya (harusnya cukup)
+        if len(self.images) < (self.row * self.col) // 2:
+            raise ValueError("Gambar husbunya kurang.")
 
-        # Duplikasi dan acak gambar
-        self.cards = self.images[: (self.ROWS * self.COLS) // 2] * 2
+        #duplikat kartu jadi dua
+        self.cards = self.images[: (self.row * self.col) // 2] * 2
         random.shuffle(self.cards)
 
-        # Menghitung offset untuk memusatkan grid
-        self.total_grid_width = self.COLS * self.CARD_WIDTH + (self.COLS - 1) * self.PADDING
-        self.total_grid_height = self.ROWS * self.CARD_HEIGHT + (self.ROWS - 1) * self.PADDING
-        self.offset_x = (self.SCREEN_WIDTH - self.total_grid_width) // 2
-        self.offset_y = (self.SCREEN_HEIGHT - self.total_grid_height) // 2
+        #nengahin kartu
+        self.w_rect_tengah = self.col * self.w_kartu + self.col * self.padding
+        self.h_rect_tengah = self.row * self.h_kartu + self.row * self.padding
+        self.offset_x = (self.w_screen - self.w_rect_tengah) // 2
+        self.offset_y = (self.h_screen - self.h_rect_tengah) // 2
 
-        # Membuat rect untuk setiap kartu
+        #kosongan kartu (rect nya)
         self.card_rects = []
-        for y in range(self.ROWS):
-            for x in range(self.COLS):
-                rect_x = self.offset_x + x * (self.CARD_WIDTH + self.PADDING)
-                rect_y = self.offset_y + y * (self.CARD_HEIGHT + self.PADDING)
-                self.card_rects.append(pygame.Rect(rect_x, rect_y, self.CARD_WIDTH, self.CARD_HEIGHT))
+        for y in range(self.row):
+            for x in range(self.col):
+                rect_x = self.offset_x + x * (self.w_kartu + self.padding)
+                rect_y = self.offset_y + y * (self.h_kartu + self.padding)
+                self.card_rects.append(pygame.Rect(rect_x, rect_y, self.w_kartu, self.h_kartu))
 
-        # Load custom font
-        self.font_path = os.path.join(self.image_dir, 'Nexa-Heavy.ttf')
-        self.font_large = pygame.font.Font(self.font_path, 68)
-        self.font_medium = pygame.font.Font(self.font_path, 45)
-        self.font_small = pygame.font.Font(self.font_path, 25)
+        #import font
+        self.font_path = os.path.join(self.assets, 'Nexa-Heavy.ttf')
+        self.fbesar = pygame.font.Font(self.font_path, 68)
+        self.fmed = pygame.font.Font(self.font_path, 45)
+        self.fkecil = pygame.font.Font(self.font_path, 25)
 
-        # State permainan
-        self.flipped_cards = []
-        self.matched_cards = []
+        #state gamenya
+        self.flipped = []
+        self.matched = []
         self.waiting = False
-        self.wait_time = 1000  # Waktu tunggu dalam milidetik
+        self.wait_time = 1000 
         self.start_ticks = 0
-        self.start_time = 0  # Tambahkan variabel start_time
+        self.start_time = 0  
         self.show_all_cards = False
         self.show_start_time = 0
+        self.score = 0
 
-        # State untuk layar utama dan game over
+        #state layarnya
         self.START = 0
         self.PLAYING = 1
         self.GAME_OVER = 2
         self.game_state = self.START
 
-        # Menghitung posisi tombol "Akhiri Game"
-        self.button_width = 200
-        self.button_height = 50
-        self.button_x = (self.SCREEN_WIDTH - self.button_width) // 2
-        self.button_y = self.offset_y + self.total_grid_height + self.PADDING
+        #button akhiri game
+        self.w_button_A = 200
+        self.h_button_A = 50
+        self.button_x = (self.w_screen - self.w_button_A) // 2
+        self.button_y = self.offset_y + self.h_rect_tengah + self.padding
 
-        # Loop utama
         self.run = True
 
-    def create_rounded_mask(self, surface, radius):
+    def round_edge(self, surface, radius):
         mask = pygame.Surface((surface.get_width(), surface.get_height()), pygame.SRCALPHA)
         pygame.draw.rect(mask, (255, 255, 255, 255), mask.get_rect(), border_radius=radius)
         rounded_image = surface.copy()
         rounded_image.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
         return rounded_image
 
-    def draw_cards(self):
+    def kartu(self):
         for i, rect in enumerate(self.card_rects):
-            if i in self.flipped_cards or i in self.matched_cards:
-                scaled_image = pygame.transform.scale(self.cards[i], (self.CARD_WIDTH, self.CARD_HEIGHT))
-                rounded_image = self.create_rounded_mask(scaled_image, 15)
+            if i in self.flipped or i in self.matched:
+                scaled_image = pygame.transform.scale(self.cards[i], (self.w_kartu, self.h_kartu))
+                rounded_image = self.round_edge(scaled_image, 15)
                 self.screen.blit(rounded_image, rect.topleft)
             else:
                 pygame.draw.rect(self.screen, (79, 97, 112), rect, border_radius=15)
 
-    def handle_mouse_event(self, event):
+    def garis_besar(self, event):
         if self.game_state == self.START:
             self.show_all_cards = True
             self.show_start_time = pygame.time.get_ticks()
         elif self.game_state == self.GAME_OVER:
-            self.reset_game()
+            self.restart()
         elif self.game_state == self.PLAYING and not self.waiting:
-            if len(self.flipped_cards) < 2:
+            if len(self.flipped) < 2:
                 for i, rect in enumerate(self.card_rects):
-                    if rect.collidepoint(event.pos) and i not in self.matched_cards and i not in self.flipped_cards:
-                        self.flipped_cards.append(i)
+                    if rect.collidepoint(event.pos) and i not in self.matched and i not in self.flipped:
+                        self.flipped.append(i)
                         break
 
-            # Cek apakah tombol "Akhiri Game" diklik
-            if self.button_x <= event.pos[0] <= self.button_x + self.button_width and self.button_y <= event.pos[1] <= self.button_y + self.button_height:
+            #akhiri game
+            if self.button_x <= event.pos[0] <= self.button_x + self.w_button_A and self.button_y <= event.pos[1] <= self.button_y + self.h_button_A:
                 self.game_state = self.GAME_OVER
 
-    def check_for_match(self):
-        if len(self.flipped_cards) == 2 and not self.waiting:
-            if self.cards[self.flipped_cards[0]] == self.cards[self.flipped_cards[1]]:
-                self.matched_cards.extend(self.flipped_cards)
-                self.flipped_cards = []
-                # Check if all cards are matched
-                if len(self.matched_cards) == len(self.card_rects):
+    def cek_match(self):
+        if len(self.flipped) == 2 and not self.waiting:
+            if self.cards[self.flipped[0]] == self.cards[self.flipped[1]]:
+                self.matched.extend(self.flipped)
+                self.flipped = []
+                self.score += 10 
+                #kalo match semua
+                if len(self.matched) == len(self.card_rects):
                     self.game_state = self.GAME_OVER
             else:
                 self.waiting = True
@@ -131,72 +130,88 @@ class MemoryGame:
         if self.waiting:
             seconds = (pygame.time.get_ticks() - self.start_ticks)
             if seconds > self.wait_time:
-                self.flipped_cards = []
+                self.flipped = []
                 self.waiting = False
 
-    def display_timer(self):
-        elapsed_time = pygame.time.get_ticks() - self.start_time
-        if elapsed_time > 60000:  # 1 menit = 60000 milidetik
+    def time_left(self):
+        waktu = pygame.time.get_ticks() - self.start_time
+        if waktu > 60000:  #1 menit = 60.000
             self.game_state = self.GAME_OVER
 
-        # Display remaining time
-        remaining_time = max(0, 60000 - elapsed_time)
-        timer_text = self.font_medium.render(f"Time Left: {remaining_time // 1000}s", True, (245, 237, 229))
-        self.screen.blit(timer_text, (20, 20))
+        sisa_waktu = max(0, 60000 - waktu)
+        teks_waktu = self.fmed.render(f"Time Left: {sisa_waktu // 1000}s", True, (245, 237, 229))
+        self.screen.blit(teks_waktu, (20, 20))
 
-    def draw_end_button(self):
-        pygame.draw.rect(self.screen, (217, 74, 74), (self.button_x, self.button_y, self.button_width, self.button_height), border_radius=15)
-        end_text = self.font_small.render("Akhiri Game", True, (245, 237, 229))
-        end_text_rect = end_text.get_rect(center=(self.button_x + self.button_width // 2, self.button_y + self.button_height // 2))
-        self.screen.blit(end_text, end_text_rect)
+    def button_akhiri(self):
+        pygame.draw.rect(self.screen, (217, 74, 74), (self.button_x, self.button_y, self.w_button_A, self.h_button_A), border_radius=15)
+        akhiri = self.fkecil.render("Akhiri Game", True, (245, 237, 229))
+        akhiri_rect = akhiri.get_rect(center=(self.button_x + self.w_button_A // 2, self.button_y + self.h_button_A // 2))
+        self.screen.blit(akhiri, akhiri_rect)
 
-    def display_start_screen(self):
+    def screen_mulai(self):
         if self.show_all_cards:
             for i, rect in enumerate(self.card_rects):
-                scaled_image = pygame.transform.scale(self.cards[i], (self.CARD_WIDTH, self.CARD_HEIGHT))
-                rounded_image = self.create_rounded_mask(scaled_image, 15)
+                scaled_image = pygame.transform.scale(self.cards[i], (self.w_kartu, self.h_kartu))
+                rounded_image = self.round_edge(scaled_image, 15)
                 self.screen.blit(rounded_image, rect.topleft)
 
-            if pygame.time.get_ticks() - self.show_start_time >= 3000:  # 3 detik
+            if pygame.time.get_ticks() - self.show_start_time >= 3000:  #3 detik
                 self.game_state = self.PLAYING
                 self.start_time = pygame.time.get_ticks()  # Update start_time ketika permainan dimulai
         else:
-            welcome_text = self.font_large.render("Remember Your Husbu", True, (245, 237, 229))
-            welcome_text_rect = welcome_text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 - 100))
+            welcome_text = self.fbesar.render("Remember Your Husbu", True, (245, 237, 229))
+            welcome_text_rect = welcome_text.get_rect(center=(self.w_screen // 2, self.h_screen // 2 - 100))
             self.screen.blit(welcome_text, welcome_text_rect)
 
-            text = self.font_large.render("Lessgooooooo", True, (245, 237, 229))
-            text_rect = text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 + 100))
+            text = self.fbesar.render("Lessgooooooo", True, (245, 237, 229))
+            text_rect = text.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 100))
             self.screen.blit(text, text_rect)
 
-            # Periksa apakah mouse mendekati teks
+            #ganti warna teks
             if text_rect.collidepoint(pygame.mouse.get_pos()):
-                text = self.font_large.render("Lessgooooooo", True, (217, 74, 74))  # Ubah warna teks saat mouse mendekat
+                text = self.fbesar.render("Lessgooooooo", True, (217, 74, 74))
                 self.screen.blit(text, text_rect)
+       
+    def screen_selesai(self):
+        text1 = self.fbesar.render("Yeay Selesai!", True, (217, 74, 74))
+        text1_rect = text1.get_rect(center=(self.w_screen // 2, self.h_screen // 2 - 100))
+        self.screen.blit(text1, text1_rect)
 
-    def display_game_over_screen(self):
-        text = self.font_large.render("Yeay Selesai!", True, (217, 74, 74))
-        text_rect = text.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 - 100))
-        self.screen.blit(text, text_rect)
+        text2 = self.fbesar.render("Score: " + str(self.score), True, (245, 237, 229))
+        text2_rect = text2.get_rect(center=(self.w_screen // 2, self.h_screen // 2))
+        self.screen.blit(text2, text2_rect)
 
-        subtext = self.font_large.render("Lagi?", True, (245, 237, 229))
-        subtext_rect = subtext.get_rect(center=(self.SCREEN_WIDTH // 2, self.SCREEN_HEIGHT // 2 + 100))
-        self.screen.blit(subtext, subtext_rect)
+        restart_text = self.fbesar.render("Main Lagi?", True, (245, 237, 229))
+        restart_rect = restart_text.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 100))
+        self.screen.blit(restart_text, restart_rect)
 
-        # Periksa apakah mouse mendekati teks "Click to Restart"
-        if subtext_rect.collidepoint(pygame.mouse.get_pos()):
-            subtext = self.font_large.render("Lagi?", True, (100, 100, 100))  # Ubah warna teks saat mouse mendekat
-            self.screen.blit(subtext, subtext_rect)
+        # Ganti warna teks
+        if restart_rect.collidepoint(pygame.mouse.get_pos()):
+            restart_text = self.fbesar.render("Main Lagi?", True, (100, 100, 100))
+            self.screen.blit(restart_text, restart_rect)
 
-    def reset_game(self):
-        self.flipped_cards = []
-        self.matched_cards = []
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.run = False
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if restart_rect.collidepoint(event.pos):
+                    self.restart()
+
+    def bagan_score(self):
+        score_text = self.fmed.render(f"Score: {self.score}", True, (245, 237, 229))
+        score_text_rect = score_text.get_rect(topright=(self.w_screen - 20, 20))
+        self.screen.blit(score_text, score_text_rect)
+
+    def restart(self):
+        self.flipped = []
+        self.matched = []
+        self.score = 0
         random.shuffle(self.cards)
         self.game_state = self.START
         self.show_all_cards = True
         self.show_start_time = pygame.time.get_ticks()
 
-    def run_game(self):
+    def mulai(self):
         while self.run:
             self.screen.fill((54, 73, 88))
             
@@ -204,22 +219,23 @@ class MemoryGame:
                 if event.type == pygame.QUIT:
                     self.run = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.handle_mouse_event(event)
+                    self.garis_besar(event)
 
             if self.game_state == self.START:
-                self.display_start_screen()
+                self.screen_mulai()
             elif self.game_state == self.PLAYING:
-                self.draw_cards()
-                self.check_for_match()
-                self.display_timer()
-                self.draw_end_button()
+                self.kartu()
+                self.cek_match()
+                self.time_left()
+                self.button_akhiri()
+                self.bagan_score() 
             elif self.game_state == self.GAME_OVER:
-                self.display_game_over_screen()
+                self.screen_selesai()
 
             pygame.display.flip()
 
         pygame.quit()
 
 if __name__ == "__main__":
-    game = MemoryGame()
-    game.run_game()
+    game = Husbu()
+    game.mulai()
