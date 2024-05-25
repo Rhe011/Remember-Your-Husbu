@@ -12,8 +12,8 @@ class Husbu:
         self.h_kartu = 110
         self.padding = 10
 
-        self.col = 4
-        self.row = 5
+        self.row = 4
+        self.col = 5
 
         #layar
         self.w_screen = 800
@@ -29,23 +29,23 @@ class Husbu:
         self.images = [pygame.image.load(os.path.join(self.assets, f)) for f in self.image_filenames]
 
         #tes eror kalo ga cukup gambarnya (harusnya cukup)
-        if len(self.images) < (self.col * self. row) //2:
+        if len(self.images) < (self.row * self. col) //2:
             raise ValueError("Gambar husbunya kurang.")
         
         #duplikat kartu jadi dua 
-        self.cards = self.images[: (self.col * self.row) // 2] * 2
+        self.cards = self.images[: (self.row * self.col) // 2] * 2
         random.shuffle(self.cards)
 
         #nengahin kartu 
-        self.w_rect_tengah = self.row * self.w_kartu + self.row * self.padding
-        self.h_rect_tengah = self.col * self.h_kartu + self.col * self.padding
+        self.w_rect_tengah = self.col * self.w_kartu + self.col * self.padding
+        self.h_rect_tengah = self.row * self.h_kartu + self.row * self.padding
         self.offset_x = (self.w_screen - self.w_rect_tengah) // 2
         self.offset_y = (self.h_screen - self.h_rect_tengah) // 2
 
         #kosongan kartu (rectnya)
         self.card_rects = []
-        for y in range(self.col):
-            for x in range(self.row):
+        for y in range(self.row):
+            for x in range(self.col):
                 rect_x = self.offset_x + x * (self.w_kartu + self.padding)
                 rect_y = self.offset_y + y * (self.h_kartu + self.padding)
                 self.card_rects.append(pygame.Rect(rect_x, rect_y, self.w_kartu, self.h_kartu))
