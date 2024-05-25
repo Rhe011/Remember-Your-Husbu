@@ -8,8 +8,8 @@ class Husbu:
         pygame.init()
 
         #kartu 
-        self.w_kartu = 110
-        self.h_kartu = 110
+        self.w_kartu = 105
+        self.h_kartu = 105
         self.padding = 10
 
         self.row = 4
@@ -29,7 +29,7 @@ class Husbu:
         self.images = [pygame.image.load(os.path.join(self.assets, f)) for f in self.image_filenames]
 
         #tes eror kalo ga cukup gambarnya (harusnya cukup)
-        if len(self.images) < (self.row * self. col) //2:
+        if len(self.images) < (self.row * self.col) // 2:
             raise ValueError("Gambar husbunya kurang.")
         
         #duplikat kartu jadi dua 
@@ -47,7 +47,7 @@ class Husbu:
         for y in range(self.row):
             for x in range(self.col):
                 rect_x = self.offset_x + x * (self.w_kartu + self.padding)
-                rect_y = self.offset_y + y * (self.h_kartu + self.padding)
+                rect_y = self.offset_y + y * (self.w_kartu + self.padding)
                 self.card_rects.append(pygame.Rect(rect_x, rect_y, self.w_kartu, self.h_kartu))
 
         #import font
@@ -79,6 +79,11 @@ class Husbu:
         self.button_x = (self.w_screen - self.w_button_A) // 2
         self.button_y = self.offset_y + self.h_rect_tengah + self.padding
 
+        #input name
+        self.name_input_active = False
+        self.name_input_text = ""
+        self.name_input_rect = pygame.Rect((self.w_screen // 2) - 150, (self.h_screen // 2), 300, 50)
+
         self.run = True
 
     def round_edge(self, surface, radius):
@@ -99,8 +104,12 @@ class Husbu:
 
     def garis_besar(self, event):
         if self.game_state == self.START:
-            self.show_all_cards = True
-            self.show_start_time = pygame.time.get_ticks()
+            if self.name_input_rect.collidepoint(event.pos):
+                self.name_input_active = True
+            else:
+                self.name_input_active = False
+                self.show_all_cards = True
+                self.show_start_time = pygame.time.get_ticks()
         elif self.game_state == self.GAME_OVER:
             self.restart()
         elif self.game_state == self.PLAYING and not self.waiting:
@@ -124,6 +133,10 @@ class Husbu:
             if pygame.time.get_ticks() - self.show_start_time >= 3000:
                 self.game_state = self.PLAYING
                 self.start_time = pygame.time.get_ticks()
+            else:
+                name_txt = self.fmed.render(f"Player: {self.name_input_text}", True, (245, 237, 229))
+                name_txt_rect = name_txt.get_rect(center=(self.w_screen // 2, self.h_screen // 2 - 275))
+                self.screen.blit(name_txt, name_txt_rect)
 
         else:
             welcome_txt = self.fbesar.render("Remember Your Husbu", True, (245, 237, 229))
@@ -131,13 +144,18 @@ class Husbu:
             self.screen.blit(welcome_txt, welcome_txt_rect)
 
             txt = self.fbesar.render("Lessgooooooo", True, (245, 237, 229))
-            txt_rect = txt.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 100))
+            txt_rect = txt.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 150))
             self.screen.blit(txt, txt_rect)
 
             #ganti warna
             if txt_rect.collidepoint(pygame.mouse.get_pos()):
                 txt = self.fbesar.render("Lessgooooooo", True, (217, 74, 74))
                 self.screen.blit(txt, txt_rect)
+
+            # Render the input box
+            pygame.draw.rect(self.screen, (245, 237, 229), self.name_input_rect, border_radius=15)
+            input_text = self.fkecil.render(self.name_input_text, True, (54, 73, 88))
+            self.screen.blit(input_text, (self.name_input_rect.x + 10, self.name_input_rect.y + 10))
 
     def cek_match(self):
         if len(self.flipped) == 2 and not self.waiting:
@@ -168,9 +186,14 @@ class Husbu:
         self.screen.blit(teks_waktu, (20, 20))
 
     def bagan_score(self):
-        score_txt = self.fmed.render(f"Score: {self.score}", True, (245, 237, 229))
-        score_txt_rect = score_txt.get_rect(topright=(self.w_screen - 20,20))
+        score_txt = self.fkecil.render(f"Score: {self.score}", True, (245, 237, 229))
+        score_txt_rect = score_txt.get_rect(topright=(self.w_screen - 20, 20))
         self.screen.blit(score_txt, score_txt_rect)
+
+        # Render the player's name next to the score
+        name_txt = self.fkecil.render(f"Player: {self.name_input_text}", True, (245, 237, 229))
+        name_txt_rect = name_txt.get_rect(topright=(self.w_screen - 20, 50))
+        self.screen.blit(name_txt, name_txt_rect)
 
     def button_akhiri(self):
         pygame.draw.rect(self.screen, (217, 74, 74), (self.button_x, self.button_y, self.w_button_A, self.h_button_A), border_radius=15)
@@ -183,9 +206,13 @@ class Husbu:
         txt1_rect = txt1.get_rect(center=(self.w_screen // 2, self.h_screen // 2 - 100))
         self.screen.blit(txt1, txt1_rect)
 
-        txt2 = self.fbesar.render("Score: " + str(self.score), True, (245, 237, 229))
-        txt2_rect = txt2.get_rect(center=(self.w_screen // 2, self.h_screen // 2))
+        txt2 = self.fmed.render("Score: " + str(self.score), True, (245, 237, 229))
+        txt2_rect = txt2.get_rect(center=(self.w_screen // 2, self.h_screen // 2 - 30))
         self.screen.blit(txt2, txt2_rect)
+
+        name_txt = self.fmed.render(f"Player: {self.name_input_text}", True, (245, 237, 229))
+        name_txt_rect = name_txt.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 30))
+        self.screen.blit(name_txt, name_txt_rect)
 
         txt3 = self.fbesar.render("Main Lagi?", True, (245, 237, 229))
         txt3_rect = txt3.get_rect(center=(self.w_screen // 2, self.h_screen // 2 + 100))
@@ -221,6 +248,14 @@ class Husbu:
                     self.run = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.garis_besar(event)
+                elif event.type == pygame.KEYDOWN:
+                    if self.name_input_active:
+                        if event.key == pygame.K_RETURN:
+                            self.name_input_active = False
+                        elif event.key == pygame.K_BACKSPACE:
+                            self.name_input_text = self.name_input_text[:-1]
+                        else:
+                            self.name_input_text += event.unicode
 
             if self.game_state == self.START:
                 self.screen_mulai()
